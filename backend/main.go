@@ -25,7 +25,7 @@ func punHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	pun := puns[rand.Intn(len(puns))]
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 1000000; i++ {
 		leakySlice = append(leakySlice, pun)
 	}
 	json.NewEncoder(w).Encode(pun)
