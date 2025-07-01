@@ -24,6 +24,10 @@ resource "google_project_service" "artifactregistry" {
   service = "artifactregistry.googleapis.com"
 }
 
+resource "google_project_service" "monitoring" {
+  service = "monitoring.googleapis.com"
+}
+
 resource "google_artifact_registry_repository" "gcr_repo" {
   provider      = google
   location      = var.region
@@ -102,5 +106,29 @@ resource "google_cloud_run_service_iam_binding" "frontend_noauth" {
   role     = "roles/run.invoker"
   members = [
     "allUsers",
+  ]
+}
+
+resource "google_monitoring_uptime_check_config" "frontend_uptime_check" {
+  display_name = "Frontend Uptime Check"
+  timeout      = "60s"
+  period       = "300s"
+
+  http_check {
+    path = "/"
+    port = "443"
+    use_ssl = true
+  }
+
+  monitored_resource {
+    type = "uptime_url"
+    labels = {
+      host = trimprefix(google_cloud_run_v2_service.frontend.uri, "https://")
+    }
+  }
+
+  depends_on = [
+    google_project_service.monitoring,
+    google_cloud_run_v2_service.frontend
   ]
 }
