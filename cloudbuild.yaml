@@ -1,0 +1,8 @@
+steps:
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    gcloud config set project $$PROJECT_ID
+    gcloud infra-manager deployments apply projects/$$PROJECT_ID/locations/us-central1/deployments/coffee-pun-deployment --service-account=projects/$$PROJECT_ID/serviceAccounts/$(gcloud projects describe $$PROJECT_ID --format="value(projectNumber)")-compute@developer.gserviceaccount.com --git-source-repo=https://github.com/your-repo/your-project.git --git-source-directory=terraform --git-source-ref=main
