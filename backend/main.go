@@ -19,10 +19,13 @@ var puns = []Pun{
 	{Pun: "I'm not addicted to coffee, we're just in a committed relationship."},
 }
 
+var leakySlice []Pun
+
 func punHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	pun := puns[rand.Intn(len(puns))]
+	leakySlice = append(leakySlice, pun)
 	json.NewEncoder(w).Encode(pun)
 }
 
