@@ -54,6 +54,11 @@ resource "google_cloud_run_v2_service" "backend" {
   template {
     containers {
       image = "gcr.io/${var.project_id}/coffee-pun-backend"
+      resources {
+        limits = {
+          memory = "128Mi"
+        }
+      }
     }
   }
 
