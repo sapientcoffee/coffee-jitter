@@ -1,0 +1,9 @@
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: weather-app-pipeline
+description: "Weather App delivery pipeline"
+serialPipeline:
+  stages:
+  - targetId: weather-app-prod
+    profiles: []

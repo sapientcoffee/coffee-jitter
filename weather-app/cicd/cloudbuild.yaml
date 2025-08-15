@@ -1,0 +1,23 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    gcloud deploy apply --file=weather-app/cicd/clouddeploy.yaml --region=us-central1 --project=coffee-jitters
+    gcloud deploy apply --file=weather-app/cicd/target.yaml --region=us-central1 --project=coffee-jitters
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/coffee-jitters/weather-app/weather-service:$COMMIT_SHA', './weather-app']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/coffee-jitters/weather-app/weather-service:$COMMIT_SHA']
+- name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    gcloud deploy releases create weather-app-release-$SHORT_SHA \
+      --delivery-pipeline=weather-app-pipeline \
+      --region=us-central1 \
+      --project=coffee-jitters \
+      --skaffold-file=weather-app/cicd/skaffold.yaml \
+      --images=weather-service=us-central1-docker.pkg.dev/coffee-jitters/weather-app/weather-service:$COMMIT_SHA

@@ -1,0 +1,25 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: weather-service
+spec:
+  template:
+    spec:
+      containers:
+      - image: weather-service
+        ports:
+        - containerPort: 8080
+        env:
+        - name: BUCKET_NAME
+          value: "weather-results-bucket-coffee-jitters"
+        - name: DB_NAME
+          value: "weather_db"
+        - name: DB_USER
+          value: "weather_user"
+        - name: DB_PASS
+          value: "a-very-secure-password"
+        - name: INSTANCE_CONNECTION_NAME
+          value: "coffee-jitters:us-central1:weather-db-instance"
+        - name: PROJECT_ID
+          value: "coffee-jitters"
+      serviceAccountName: 981525598574-compute@developer.gserviceaccount.com

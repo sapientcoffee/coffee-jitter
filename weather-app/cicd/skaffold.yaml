@@ -1,0 +1,15 @@
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: weather-app
+build:
+  artifacts:
+  - image: weather-service
+    context: weather-app
+  tagPolicy:
+    gitCommit: {}
+deploy:
+  cloudrun: {}
+manifests:
+  rawYaml:
+  - cicd/cloudrun-service.yaml
