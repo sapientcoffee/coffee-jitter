@@ -2,6 +2,7 @@
 
 # 🚀 Welcome to the Weather App Bootstrap Script! 🚀
 # This script is designed to get your environment set up faster than a double shot of espresso.
+# It will prepare all the necessary infrastructure for your CI/CD pipeline.
 # So grab your favorite mug, and let's get brewing! ☕️
 
 # --- Configuration ---
@@ -24,7 +25,8 @@ gcloud services enable run.googleapis.com \
     bigquery.googleapis.com \
     cloudbuild.googleapis.com \
     artifactregistry.googleapis.com \
-    apphub.googleapis.com
+    apphub.googleapis.com \
+    clouddeploy.googleapis.com
 
 echo "\nLet's create an App Hub application to keep things tidy... ☕️"
 gcloud apphub applications create weather-and-coffee \
@@ -66,61 +68,31 @@ gcloud artifacts repositories create weather-app \
     --location=${REGION} \
     --description="Weather App repository"
 
-echo "\nBuilding and pushing the Docker image. This is where the magic happens! ✨"
-gcloud builds submit --tag ${REGION}-docker.pkg.dev/${SERVICE_PROJECT_ID}/weather-app/weather-service:latest weather-app
+echo "\nSetting up our sophisticated, multi-stage deployment pipeline... ☕️"
+gcloud deploy apply --file=weather-app/cicd/clouddeploy.yaml --region=us-central1 --project=coffee-jitters
 
-echo "\nThe final pour! Deploying the application to Cloud Run... 🚀"
-export INSTANCE_CONNECTION_NAME=$(gcloud sql instances describe ${SQL_INSTANCE_NAME} --format='value(connectionName)')
-gcloud run deploy weather-service \
-    --image ${REGION}-docker.pkg.dev/${SERVICE_PROJECT_ID}/weather-app/weather-service:latest \
-    --platform managed \
-    --region ${REGION} \
-    --allow-unauthenticated \
-    --add-cloudsql-instances=${INSTANCE_CONNECTION_NAME} \
-    --set-env-vars="BUCKET_NAME=${BUCKET_NAME}" \
-    --set-env-vars="DB_USER=${DB_USER}" \
-    --set-env-vars="DB_PASS=${DB_PASS}" \
-    --set-env-vars="DB_NAME=${DB_NAME}" \
-    --set-env-vars="INSTANCE_CONNECTION_NAME=${INSTANCE_CONNECTION_NAME}"
+echo "\nGranting the necessary permissions to our trusty Cloud Build service account..."
+export PROJECT_NUMBER=$(gcloud projects describe ${SERVICE_PROJECT_ID} --format='value(projectNumber)')
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+    --role="roles/clouddeploy.releaser" \
+    --condition=None
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+    --role="roles/run.developer" \
+    --condition=None
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+    --role="roles/iam.serviceAccountUser" \
+    --condition=None
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+    --role="roles/logging.logWriter" \
+    --condition=None
 
-echo "\nNow, let's register our new service and workload with App Hub. It's like putting a fancy label on our coffee blend... 🏷️"
+echo "\n🎉 Success! Your infrastructure is ready. 🎉"
+echo "The final steps are manual:"
+echo "1. Connect your Git repository to Cloud Build in the Google Cloud Console."
+echo "2. Create a Cloud Build trigger for the 'main' branch."
 
-# Wait for the service to be discovered
-echo " waiting for the Cloud Run service to be discovered by App Hub..."
-while [[ -z "$(gcloud apphub discovered-services list --project=${HOST_PROJECT_ID} --location=${REGION} --filter='serviceReference="//run.googleapis.com/projects/${SERVICE_PROJECT_ID}/locations/us-central1/services/weather-service"' --format='value(ID)')" ]]; do
-    echo " still waiting for the service to be discovered..."
-    sleep 10
-done
-
-SERVICE_ID=$(gcloud apphub discovered-services list --project=${HOST_PROJECT_ID} --location=${REGION} --filter='serviceReference="//run.googleapis.com/projects/${SERVICE_PROJECT_ID}/locations/us-central1/services/weather-service"' --format='value(ID)')
-echo " service discovered! ID: ${SERVICE_ID}"
-
-gcloud apphub applications services create weather-service \
-    --application=weather-and-coffee \
-    --location=${REGION} \
-    --project=${HOST_PROJECT_ID} \
-    --discovered-service="projects/${HOST_PROJECT_ID}/locations/${REGION}/discoveredServices/${SERVICE_ID}" \
-    --display-name="Weather Service"
-
-# Wait for the workload to be discovered
-echo " waiting for the Cloud SQL instance to be discovered by App Hub..."
-while [[ -z "$(gcloud apphub discovered-workloads list --project=${HOST_PROJECT_ID} --location=${REGION} --filter='workloadReference="//cloudsql.googleapis.com/projects/${SERVICE_PROJECT_ID}/instances/weather-db-instance"' --format='value(ID)')" ]]; do
-    echo " still waiting for the workload to be discovered..."
-    sleep 10
-done
-
-WORKLOAD_ID=$(gcloud apphub discovered-workloads list --project=${HOST_PROJECT_ID} --location=${REGION} --filter='workloadReference="//cloudsql.googleapis.com/projects/${SERVICE_PROJECT_ID}/instances/weather-db-instance"' --format='value(ID)')
-echo " workload discovered! ID: ${WORKLOAD_ID}"
-
-gcloud apphub applications workloads create weather-db-instance \
-    --application=weather-and-coffee \
-    --location=${REGION} \
-    --project=${HOST_PROJECT_ID} \
-    --discovered-workload="projects/${HOST_PROJECT_ID}/locations/${REGION}/discoveredWorkloads/${WORKLOAD_ID}" \
-    --display-name="Weather DB Instance"
-
-echo "\n🎉 Success! Your weather app is now live and registered in App Hub! 🎉"
-export SERVICE_URL=$(gcloud run services describe weather-service --platform managed --region ${REGION} --format 'value(status.url)')
-echo "You can test it with the following command:"
-echo "curl -X GET ${SERVICE_URL}/past/2005"
-echo "\nEnjoy your freshly deployed application! ☕️"
+echo "\nEnjoy your freshly brewed CI/CD pipeline! ☕️"

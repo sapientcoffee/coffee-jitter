@@ -116,55 +116,19 @@ To use the Terraform configuration, you will need to have [Terraform](https://ww
 
 ## New Application: Weather Data Explorer
 
-This new application will demonstrate the value of Gemini Cloud Assist Investigations Agent. It is a simple Flask application that queries the `bigquery-public-data:samples.gsod` dataset, stores the results in Cloud SQL, and saves a JSON file to a Cloud Storage bucket.
+This new application will demonstrate the value of Gemini Cloud Assist Investigations Agent and App Hub. It is a simple Flask application that queries the `bigquery-public-data:samples.gsod` dataset, stores the results in Cloud SQL, and saves a JSON file to a Cloud Storage bucket.
 
 The application code and deployment instructions can be found in the `weather-app` directory.
 
-### Architecture
+### CI/CD Pipeline
 
-*   **Backend:** A Cloud Run service that will query the BigQuery `gsod` dataset.
-*   **Database:** Cloud SQL will be used to store user-defined queries or application state.
-*   **Storage:** Cloud Storage will be used to store exported data or generated reports from the BigQuery queries.
+The `weather-app` is deployed using a sophisticated, multi-stage CI/CD pipeline powered by Cloud Build and Cloud Deploy. The pipeline is defined in the `weather-app/cicd` directory and consists of the following stages:
 
-## Gemini Cloud Assist Investigations Supported Products
+*   **Beans (Development):** A development environment for initial testing.
+*   **Grind (QA):** A QA environment for more thorough testing.
+*   **Brew (Production):** A multi-target production environment that deploys to both the US and Europe, with a manual approval step.
 
-*   App Hub
-*   Cloud SQL
-*   Cloud Storage
-*   Compute Engine
-*   Google Kubernetes Engine
-*   Cloud Networking
-*   Cloud Run
-*   Dataproc on Compute Engine
-*   Google Cloud Serverless for Apache Spark
-*   Pub/Sub
-*   BigQuery
-*   Bigtable
-*   Cloud Composer
-*   Dataflow
-*   Spanner
-*   Memorystore for Redis
-*   Identity and Access Management
-*   Cloud Quotas
+The pipeline is triggered by a push to the `main` branch of the Git repository.
 
-## App Hub Supported Resources
-
-*   AlloyDB for PostgreSQL
-*   Bigtable
-*   Cloud Data Fusion
-*   Cloud Deploy
-*   Cloud Load Balancing
-*   Cloud Logging
-*   Cloud Run
-*   Cloud SQL
-*   Cloud Storage
-*   Dataproc Metastore
-*   Firestore
-*   Google Kubernetes Engine (GKE)
-*   Managed Service for Microsoft Active Directory
-*   Memorystore for Redis
-*   Pub/Sub
-*   Secret Manager
-*   Spanner
-*   Vertex AI
-*   Compute Engine
+---
+**Note for Gemini:** Do not remove details from documentation or deployment scripts without explicit authorization from the user.

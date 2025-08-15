@@ -2,8 +2,67 @@ apiVersion: deploy.cloud.google.com/v1
 kind: DeliveryPipeline
 metadata:
   name: weather-app-pipeline
-description: "Weather App delivery pipeline"
+description: "Our finely crafted pipeline to deliver the weather-app to the world"
 serialPipeline:
   stages:
-  - targetId: weather-app-prod
-    profiles: []
+  - targetId: beans
+    profiles: [dev]
+    strategy:
+      standard:
+        verify: true
+  - targetId: grind
+    profiles: [qa]
+    strategy:
+      standard:
+        verify: false
+  - targetId: brew
+    profiles: [prod]
+    strategy:
+      canary:
+        runtimeConfig:
+          cloudRun:
+            automaticTrafficControl: true
+        canaryDeployment:
+          percentages: [25, 50, 75]
+          verify: false
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: beans
+description: "The development environment, where the beans of an idea are planted"
+run:
+  location: projects/coffee-jitters/locations/us-central1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: grind
+description: "The QA environment, where we grind out the bugs"
+run:
+  location: projects/coffee-jitters/locations/us-central1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+ name: brew-us
+description: "Our US production environment, serving up fresh weather data"
+run:
+  location: projects/coffee-jitters/locations/us-central1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+ name: brew-europe
+description: "Our European production environment, for a continental brew"
+run:
+  location: projects/coffee-jitters/locations/europe-west1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: brew
+description: "Our production environment, the final, perfect cup"
+requireApproval: true
+multiTarget:
+  targetIds: [brew-us, brew-europe]
