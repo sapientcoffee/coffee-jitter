@@ -1,0 +1,55 @@
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# General
+.DS_Store
+Thumbs.db
+*.log
+firebase-debug.log
+
+# Go
+# Compiled binaries
+/backend/backend
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Node.js / Angular
+/frontend/frontend/node_modules/
+/frontend/frontend/dist/
+/frontend/frontend/tmp/
+/frontend/frontend/.angular/
+/frontend/frontend/coverage/
+npm-debug.log*
+yarn-error.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+/weather-app/build/
+/weather-app/dist/
+*.egg-info/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+crash.log
+*.tfvars
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

@@ -21,3 +21,6 @@ steps:
       --project=coffee-jitters \
       --skaffold-file=weather-app/cicd/skaffold.yaml \
       --images=weather-service=us-central1-docker.pkg.dev/coffee-jitters/weather-app/weather-service:$COMMIT_SHA
+
+options:
+  logging: CLOUD_LOGGING_ONLY
