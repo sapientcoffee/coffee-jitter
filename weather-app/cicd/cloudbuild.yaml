@@ -48,6 +48,7 @@ steps:
       gcloud deploy releases create "coffee-release-${SHORT_SHA}" \
         --region="${_DEPLOY_REGION}" \
         --delivery-pipeline="${_DEPLOY_PIPELINE}" \
+        --skaffold-file="weather-app/cicd/skaffold.yaml" \
         --annotations="commitID=${REVISION_ID}" \
         --images="app=${_AR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}/${_IMAGE}@$(cat /workspace/image-sha.txt)"
 
