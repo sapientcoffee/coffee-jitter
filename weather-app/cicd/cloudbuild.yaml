@@ -6,7 +6,7 @@ steps:
     - build
     - "-t"
     - "$_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_IMAGE:$COMMIT_SHA"
-    - .
+    - weather-app
     - "-f"
     - weather-app/Dockerfile
 
