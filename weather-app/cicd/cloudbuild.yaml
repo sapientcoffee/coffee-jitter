@@ -1,10 +1,65 @@
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
-  entrypoint: 'bash'
+# 🏗️ Build the container image, just like brewing the perfect espresso shot
+- name: gcr.io/cloud-builders/docker
+  id: "🏗️ Build the Perfect Espresso Shot"
   args:
-  - '-c'
-  - |
-    echo "Hello, Coffee!"
+    - build
+    - "-t"
+    - "$_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_IMAGE:$COMMIT_SHA"
+    - .
+    - "-f"
+    - weather-app/Dockerfile
+
+# 🏗️ Push the container image to Artifact Registry, like serving a fresh cup of coffee
+- name: gcr.io/cloud-builders/docker
+  id: "🏗️ Serve a Fresh Cup of Coffee"
+  args:
+    - push
+    - "$_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_IMAGE:$COMMIT_SHA"
+
+# 🔐 Get the image SHA from Artifact Registry, like checking the temperature of your brew
+- name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+  id: "🔐 Check the Brew Temperature"
+  entrypoint: /bin/bash
+  args:
+    - -c
+    - |
+      gcloud artifacts docker images describe \
+        "$_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_IMAGE:$COMMIT_SHA" \
+        --format 'value(image_summary.digest)' > /workspace/image-sha.txt
+
+# 🔐 Create a Software Bill of Materials (SBOM), like listing the ingredients of your special blend
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  id: "🔐 List the Ingredients"
+  allowFailure: true
+  entrypoint: /bin/bash
+  args:
+    - -c
+    - |
+      gcloud artifacts sbom export --uri "${_AR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}/${_IMAGE}@$(cat /workspace/image-sha.txt)"
+
+# 🚀 Create a Cloud Deploy release candidate, like presenting your latte art
+- name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  id: "🚀 Present Your Latte Art"
+  entrypoint: /bin/bash
+  args:
+    - -c
+    - |
+      gcloud deploy releases create "coffee-release-${SHORT_SHA}" \
+        --region="${_DEPLOY_REGION}" \
+        --delivery-pipeline="${_DEPLOY_PIPELINE}" \
+        --annotations="commitID=${REVISION_ID}" \
+        --images="app=${_AR_HOSTNAME}/${PROJECT_ID}/${_SERVICE_NAME}/${_IMAGE}@$(cat /workspace/image-sha.txt)"
+
+images:
+- "$_AR_HOSTNAME/$PROJECT_ID/$_SERVICE_NAME/$_IMAGE:$COMMIT_SHA"
 
 options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+
+substitutions:
+  _AR_HOSTNAME: "us-central1-docker.pkg.dev"
+  _SERVICE_NAME: "weather-app"
+  _IMAGE: "weather-service"
+  _DEPLOY_REGION: "us-central1"
+  _DEPLOY_PIPELINE: "weather-app-pipeline"
