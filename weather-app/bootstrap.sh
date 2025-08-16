@@ -27,6 +27,7 @@ gcloud services enable run.googleapis.com \
     cloudbuild.googleapis.com \
     artifactregistry.googleapis.com \
     apphub.googleapis.com \
+    clouddeploy.googleapis.com \
     containeranalysis.googleapis.com
 
 echo "\nLet's create an App Hub application to keep things tidy... ☕️"

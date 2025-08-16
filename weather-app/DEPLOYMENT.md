@@ -105,8 +105,6 @@ gcloud builds triggers create github \
 
 ### 4. Push to Git and Watch the Magic!
 
-Now, all you need to do is commit and push your changes to the `main` branch. This will trigger the pipeline, which will build your image, create a release, and deploy it to the "beans" (development) environment.
-
-You can then promote the release to the "grind" (QA) and "brew" (production) environments using the Cloud Deploy UI or the `gcloud deploy releases promote` command.
+Now, all you need to do is commit and push your changes to the `main` branch. This will trigger the pipeline, which will build your image, create a release, and deploy it to the "taste" (testing) environment. After a successful deployment to "taste", the pipeline will automatically proceed to the "serve" (production) environment, which will deploy to both the US and Europe.
 
 Enjoy your automated, coffee-powered CI/CD pipeline! ☕️

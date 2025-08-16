@@ -5,47 +5,29 @@ metadata:
 description: "Our finely crafted pipeline to deliver the weather-app to the world"
 serialPipeline:
   stages:
-  - targetId: beans
+  - targetId: taste
     profiles: [dev]
     strategy:
       standard:
         verify: true
-  - targetId: grind
-    profiles: [qa]
+  - targetId: serve
+    profiles: [prod]
     strategy:
       standard:
         verify: false
-  - targetId: brew
-    profiles: [prod]
-    strategy:
-      canary:
-        runtimeConfig:
-          cloudRun:
-            automaticTrafficControl: true
-        canaryDeployment:
-          percentages: [25, 50, 75]
-          verify: false
 ---
 apiVersion: deploy.cloud.google.com/v1
 kind: Target
 metadata:
-  name: beans
-description: "The development environment, where the beans of an idea are planted"
+  name: taste
+description: "The testing environment, where we taste the new brew"
 run:
   location: projects/coffee-jitters/locations/us-central1
 ---
 apiVersion: deploy.cloud.google.com/v1
 kind: Target
 metadata:
-  name: grind
-description: "The QA environment, where we grind out the bugs"
-run:
-  location: projects/coffee-jitters/locations/us-central1
----
-apiVersion: deploy.cloud.google.com/v1
-kind: Target
-metadata:
- name: brew-us
+ name: serve-us
 description: "Our US production environment, serving up fresh weather data"
 run:
   location: projects/coffee-jitters/locations/us-central1
@@ -53,7 +35,7 @@ run:
 apiVersion: deploy.cloud.google.com/v1
 kind: Target
 metadata:
- name: brew-europe
+ name: serve-europe
 description: "Our European production environment, for a continental brew"
 run:
   location: projects/coffee-jitters/locations/europe-west1
@@ -61,8 +43,7 @@ run:
 apiVersion: deploy.cloud.google.com/v1
 kind: Target
 metadata:
-  name: brew
+  name: serve
 description: "Our production environment, the final, perfect cup"
-requireApproval: true
 multiTarget:
-  targetIds: [brew-us, brew-europe]
+  targetIds: [serve-us, serve-europe]
