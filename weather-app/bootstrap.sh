@@ -11,6 +11,7 @@ export HOST_PROJECT_ID="google-mpf-958521849590" # Your App Hub host project ID
 export SERVICE_PROJECT_ID="coffee-jitters" # Your service project ID
 export REGION="us-central1" # The region where you want to deploy
 export DB_PASS="a-very-secure-password" # 🤫 Psst! Change this to a real password!
+export USER_EMAIL="admin@robedwards.altostrat.com" # Your email address
 
 # --- Script Starts Here ---
 
@@ -88,6 +89,16 @@ gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
 gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
     --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
     --role="roles/logging.logWriter" \
+    --condition=None
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
+    --role="roles/cloudbuild.builds.editor" \
+    --condition=None
+
+echo "\nAnd of course, we need to make sure you can see the logs... 🕵️"
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="user:${USER_EMAIL}" \
+    --role="roles/logging.viewer" \
     --condition=None
 
 echo "\n🎉 Success! Your infrastructure is ready. 🎉"

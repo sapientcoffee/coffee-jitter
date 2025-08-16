@@ -77,7 +77,7 @@ This method sets up a sophisticated, multi-stage CI/CD pipeline powered by Cloud
 
 ### 1. Run the Bootstrap Script
 
-The `bootstrap.sh` script will set up all the necessary infrastructure for your pipeline, including the App Hub application, GCS bucket, Cloud SQL instance, and Artifact Registry repository.
+The `bootstrap.sh` script will set up all the necessary infrastructure for your pipeline, including the App Hub application, GCS bucket, Cloud SQL instance, and Artifact Registry repository. It will also grant the necessary IAM permissions to the Cloud Build service account and your user account.
 
 ```bash
 ./weather-app/bootstrap.sh
