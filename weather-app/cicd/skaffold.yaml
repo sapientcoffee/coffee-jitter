@@ -4,12 +4,27 @@ metadata:
   name: weather-app
 build:
   artifacts:
-  - image: weather-service
+  - image: app
     context: weather-app
   tagPolicy:
     gitCommit: {}
-deploy:
-  cloudrun: {}
 manifests:
   rawYaml:
   - cicd/cloudrun-service.yaml
+profiles:
+- name: dev
+  patches:
+  - op: add
+    path: /spec/template/spec/containers/0/env/-
+    value:
+      name: STAGE
+      value: taste
+- name: prod
+  patches:
+  - op: add
+    path: /spec/template/spec/containers/0/env/-
+    value:
+      name: STAGE
+      value: serve
+deploy:
+  kubectl: {}

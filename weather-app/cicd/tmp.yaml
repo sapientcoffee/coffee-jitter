@@ -1,0 +1,208 @@
+-- clouddeploy.yaml
+
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: v60-coffee
+description: Workflow to deploy v60-coffee for the world
+serialPipeline:
+  stages:
+  - targetId: beans
+    profiles: [beans]
+    strategy:
+      standard:
+        verify: true # incorporate verification from https://shell.cloud.google.com/?show=ide%2Cterminal&walkthrough_id=deploy--cloud-deploy-verification-run&pli=1
+        predeploy:
+          actions: ["predeploy-action"]
+        postdeploy:
+          actions: ["postdeploy-action"]
+  - targetId: grind
+    profiles: [grind]
+    strategy:
+      standard:
+        verify: false
+  - targetId: brew
+    profiles: [brew]
+    strategy:
+      canary:
+        runtimeConfig:
+          cloudRun:
+            automaticTrafficControl: true
+        canaryDeployment:
+          percentages: [25, 50, 75]
+          verify: false
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: beans
+  labels:
+    label1: label1
+description: v60 development environment on Cloud Run
+deployParameters:
+  application_env1: "sampleValue1"
+run:
+  location: projects/coffee-and-codey/locations/us-east1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: grind
+description: v60 QA environment on Cloud Run
+run:
+  location: projects/coffee-and-codey/locations/us-east1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+ name: brew-us
+description: Depoy to production in US
+run:
+  location: projects/coffee-and-codey/locations/us-east1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+ name: brew-europe
+description: Depoy to production in Europe
+run:
+  location: projects/coffee-and-codey/locations/europe-west1
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: brew
+description: v60 PRODUCTION on Cloud Run
+requireApproval: true
+multiTarget:
+  targetIds: [brew-us, brew-europe]
+
+
+-- deploy-beans.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+ name: beans
+spec:
+ template:
+   spec:
+     containers:
+     - image: app
+       env:
+       - name: stage
+         value: beans
+
+-- deploy-brew.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+ name: brew
+spec:
+ template:
+   spec:
+     containers:
+     - image: app
+       env:
+       - name: stage
+         value: brew
+
+-- deploy-grind.yaml
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+ name: grind
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: "1"
+    spec:
+      containers:
+      - name: app
+        image: app
+        env:
+          - name: stage
+            value: grind
+
+
+-- deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-coffee
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-coffee
+  template:
+    metadata:
+      labels:
+        app: hello-coffee
+    spec:
+      containers:
+        - name: hello-coffee
+          image: europe-docker.pkg.dev/coffee-and-codey/coffee/hello-coffee:latest
+
+-- service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-coffee-service
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: hello-coffee
+
+-- skaffold.yaml
+apiVersion: skaffold/v4beta5
+kind: Config
+metadata:
+  name: v60-coffee
+profiles:
+- name: beans
+  manifests:
+    rawYaml:
+    - deploy-beans.yaml
+- name: grind
+  manifests:
+    rawYaml:
+    - deploy-grind.yaml
+- name: brew
+  manifests:
+    rawYaml:
+    - deploy-brew.yaml
+deploy:
+  cloudrun: {}
+verify:
+  - name: verify-test
+    container: 
+      image: ubuntu
+      command: ["/bin/sh"]
+      args: ["-c", 'echo "this is a verify action"' ]
+      name: ubuntu
+  - name: verify-endpoint-test
+    container:
+      name: gcloud
+      image: gcr.io/cloud-builders/gcloud
+      args: ["info"]  
+customActions:
+- name: predeploy-action
+  containers:
+  - name: predeploy-echo
+    image: ubuntu
+    command: ["/bin/sh"]
+    args: ["-c", 'echo "this is a predeploy action"' ]
+  - name: slo-status
+    image: gcr.io/google.com/cloudsdktool/cloud-sdk
+    command: ["/bin/sh"]
+    args: ["-c", 'result=$(curl -s -H "Authorization: Bearer $(gcloud auth application-default print-access-token)" -X GET "https://monitoring.googleapis.com/v3/projects/coffee-and-codey/timeSeries?filter=select_slo_compliance(\"projects/300502296392/services/EdBHZ28PQQ6hnrzp_YTZeA/serviceLevelObjectives/lADl8mfLTUG64aE9yCnYEQ\")&interval.endTime=2024-03-28T11:05:00.0Z" | jq ".timeSeries[0].points[0].value.doubleValue") && [[ "$result" == "1" ]] && echo "SLO Compliance Check: PASS" || echo "SLO Compliance Check: FAIL"' ]
+- name: postdeploy-action
+  containers:
+  - name: postdeploy-echo
+    image: ubuntu
+    command: ["/bin/sh"]
+    args: ["-c", 'echo "this is a postdeploy action"' ]
