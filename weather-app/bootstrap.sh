@@ -27,7 +27,7 @@ gcloud services enable run.googleapis.com \
     cloudbuild.googleapis.com \
     artifactregistry.googleapis.com \
     apphub.googleapis.com \
-    clouddeploy.googleapis.com
+    containeranalysis.googleapis.com
 
 echo "\nLet's create an App Hub application to keep things tidy... ☕️"
 gcloud apphub applications create weather-and-coffee \
@@ -95,10 +95,27 @@ gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
     --role="roles/cloudbuild.builds.editor" \
     --condition=None
 
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/storage.admin" \
+    --condition=None
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/containeranalysis.admin" \
+    --condition=None
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/clouddeploy.viewer" \
+    --condition=None
+
 echo "\nAnd of course, we need to make sure you can see the logs... 🕵️"
 gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
     --member="user:${USER_EMAIL}" \
     --role="roles/logging.viewer" \
+    --condition=None
+gcloud projects add-iam-policy-binding ${SERVICE_PROJECT_ID} \
+    --member="user:${USER_EMAIL}" \
+    --role="roles/logging.privateLogViewer" \
     --condition=None
 
 echo "\n🎉 Success! Your infrastructure is ready. 🎉"
